@@ -1,0 +1,235 @@
+/* ══════════════════════════════════════════════════════════════
+   UHI Dashboard — Premium Dark Theme
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Import Fonts ────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Root Variables ──────────────────────────────────────────── */
+:root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #111827;
+    --bg-card: rgba(17, 24, 39, 0.7);
+    --bg-card-hover: rgba(31, 41, 55, 0.8);
+    --border-color: rgba(75, 85, 99, 0.3);
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --accent-1: #f97316;  /* Orange */
+    --accent-2: #ef4444;  /* Red */
+    --accent-3: #10b981;  /* Emerald */
+    --accent-4: #3b82f6;  /* Blue */
+    --accent-5: #8b5cf6;  /* Violet */
+    --gradient-fire: linear-gradient(135deg, #f97316, #ef4444, #dc2626);
+    --gradient-cool: linear-gradient(135deg, #3b82f6, #8b5cf6, #6366f1);
+    --gradient-earth: linear-gradient(135deg, #10b981, #059669, #047857);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --shadow-glow: 0 0 30px rgba(249, 115, 22, 0.1);
+    --radius: 16px;
+    --radius-sm: 10px;
+}
+
+/* ── Global Streamlit Overrides ──────────────────────────────── */
+.stApp {
+    background: var(--bg-primary) !important;
+    font-family: 'Inter', -apple-system, sans-serif !important;
+}
+
+/* Main content area */
+.main .block-container {
+    padding: 2rem 3rem !important;
+    max-width: 1400px !important;
+}
+
+/* ── Headers ─────────────────────────────────────────────────── */
+h1 {
+    font-weight: 800 !important;
+    font-size: 2.2rem !important;
+    background: var(--gradient-fire) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 0.5rem !important;
+}
+
+h2 {
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;
+    font-size: 1.4rem !important;
+    letter-spacing: -0.01em !important;
+    border-bottom: 2px solid var(--accent-1) !important;
+    padding-bottom: 8px !important;
+}
+
+h3 {
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem !important;
+}
+
+/* ── Metric Cards ────────────────────────────────────────────── */
+[data-testid="stMetric"] {
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius) !important;
+    padding: 1.2rem 1.5rem !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    box-shadow: var(--shadow-glow) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-testid="stMetric"]:hover {
+    background: var(--bg-card-hover) !important;
+    border-color: var(--accent-1) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 40px rgba(249, 115, 22, 0.15) !important;
+}
+
+[data-testid="stMetric"] label {
+    color: var(--text-muted) !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+    color: var(--accent-1) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    font-weight: 600 !important;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.stTabs [data-baseweb="tab-list"] {
+    background: var(--glass-bg) !important;
+    border-radius: var(--radius) !important;
+    padding: 4px !important;
+    border: 1px solid var(--glass-border) !important;
+    gap: 4px !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: var(--radius-sm) !important;
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+    padding: 10px 20px !important;
+    transition: all 0.2s ease !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background: var(--gradient-fire) !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+[data-testid="stSidebar"] .block-container {
+    padding-top: 2rem !important;
+}
+
+/* ── DataFrames / Tables ─────────────────────────────────────── */
+.stDataFrame {
+    border-radius: var(--radius) !important;
+    overflow: hidden !important;
+}
+
+[data-testid="stDataFrame"] > div {
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius) !important;
+}
+
+/* ── Selectbox / Inputs ──────────────────────────────────────── */
+[data-testid="stSelectbox"] > div > div {
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Plotly Charts ───────────────────────────────────────────── */
+.js-plotly-plot {
+    border-radius: var(--radius) !important;
+    overflow: hidden !important;
+}
+
+/* ── Divider ─────────────────────────────────────────────────── */
+hr {
+    border-color: var(--border-color) !important;
+    margin: 1.5rem 0 !important;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.element-container {
+    animation: fadeIn 0.4s ease-out !important;
+}
+
+/* ── Alert Badges ────────────────────────────────────────────── */
+.critical-badge {
+    background: var(--accent-2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.warning-badge {
+    background: var(--accent-1);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 2rem 0 1rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 3rem;
+}
