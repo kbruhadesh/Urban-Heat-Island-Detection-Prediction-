@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urban Heat Island — Detection &amp; Prediction</title>
+  <meta name="description" content="Analyzing Urban Heat Island effects across 11 Indian cities using MODIS satellite data, Apache Spark, and machine learning.">
+
+  <link rel="stylesheet" href="styles.css">
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- PapaParse for CSV -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+  <!-- ═══ Navigation ═══════════════════════════════════════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <span class="icon">🌡️</span>
+        UHI Observatory
+      </a>
+      <ul class="nav-links">
+        <li><a href="#overview" class="active">Overview</a></li>
+        <li><a href="#trends">Trends</a></li>
+        <li><a href="#map-section">Map</a></li>
+        <li><a href="#comparison">Comparison</a></li>
+        <li><a href="#forecast">Forecast</a></li>
+        <li><a href="#alerts">Alerts</a></li>
+        <li><a href="#policy">Policy</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═══ Hero ═════════════════════════════════════════════════ -->
+  <header class="hero" id="overview">
+    <div class="hero-inner">
+      <h1>Urban <span>Heat Island</span><br>Observatory</h1>
+      <p>Monitoring thermal footprints across 11 Indian cities using 25 years of NASA MODIS satellite data, Apache Spark distributed processing, and machine learning forecasting.</p>
+
+      <div class="hero-stats" id="hero-stats">
+        <div class="hero-stat">
+          <div class="label">Total Records</div>
+          <div class="value" id="stat-records">—</div>
+        </div>
+        <div class="hero-stat">
+          <div class="label">Cities Monitored</div>
+          <div class="value">11</div>
+        </div>
+        <div class="hero-stat">
+          <div class="label">Time Span</div>
+          <div class="value">25 <span class="unit">years</span></div>
+        </div>
+        <div class="hero-stat">
+          <div class="label">Hottest UHI City</div>
+          <div class="value" id="stat-hottest">—</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ Main Content ═════════════════════════════════════════ -->
+  <main>
+
+    <!-- ─── Overview Section ─────────────────────────────────── -->
+    <section class="section" id="overview-section">
+      <div class="section-header">
+        <h2><span class="icon">📊</span> City UHI Rankings</h2>
+        <p>Average Urban Heat Island intensity across all cities (2000–2024)</p>
+      </div>
+
+      <div class="kpi-grid" id="kpi-grid"></div>
+
+      <div class="chart-container">
+        <h3>🏆 UHI Index by City</h3>
+        <div id="chart-rankings" style="height:420px;"></div>
+      </div>
+
+      <div class="chart-container">
+        <h3>📈 Rate of UHI Change (°C per decade)</h3>
+        <div id="chart-roc" style="height:380px;"></div>
+      </div>
+    </section>
+
+    <!-- ─── Trends Section ───────────────────────────────────── -->
+    <section class="section" id="trends">
+      <div class="section-header">
+        <h2><span class="icon">📈</span> Trend Analysis</h2>
+        <p>Historical UHI patterns, moving averages, and decade comparisons</p>
+      </div>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="yearly">Yearly Trends</button>
+        <button class="tab-btn" data-tab="moving-avg">5-Year Moving Avg</button>
+        <button class="tab-btn" data-tab="decade">By Decade</button>
+        <button class="tab-btn" data-tab="seasonal">Seasonal</button>
+      </div>
+
+      <div class="tab-panel active" id="panel-yearly">
+        <div class="chart-container"><div id="chart-yearly" style="height:480px;"></div></div>
+      </div>
+      <div class="tab-panel" id="panel-moving-avg">
+        <div class="chart-container"><div id="chart-moving-avg" style="height:480px;"></div></div>
+      </div>
+      <div class="tab-panel" id="panel-decade">
+        <div class="chart-container"><div id="chart-decade" style="height:480px;"></div></div>
+      </div>
+      <div class="tab-panel" id="panel-seasonal">
+        <div class="chart-container"><div id="chart-seasonal" style="height:480px;"></div></div>
+      </div>
+    </section>
+
+    <!-- ─── Map Section ──────────────────────────────────────── -->
+    <section class="section" id="map-section">
+      <div class="section-header">
+        <h2><span class="icon">🗺️</span> UHI Intensity Map</h2>
+        <p>Geographic distribution of Urban Heat Island intensity across India</p>
+      </div>
+      <div id="map-container"></div>
+
+      <div class="chart-container" style="margin-top:24px;">
+        <h3>🌡️ Monthly UHI Heatmap</h3>
+        <div id="chart-heatmap" style="height:420px;"></div>
+      </div>
+    </section>
+
+    <!-- ─── Comparison Section ───────────────────────────────── -->
+    <section class="section" id="comparison">
+      <div class="section-header">
+        <h2><span class="icon">🏙️</span> City Comparison</h2>
+        <p>Compare UHI patterns across cities</p>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-container">
+          <h3>🌞 Avg Urban Day Temperature</h3>
+          <div id="chart-urban-temp" style="height:400px;"></div>
+        </div>
+        <div class="chart-container">
+          <h3>🌙 Avg Night Temperature</h3>
+          <div id="chart-night-temp" style="height:400px;"></div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3>📅 Peak UHI Month per City</h3>
+        <div class="table-container" id="peak-months-table"></div>
+      </div>
+    </section>
+
+    <!-- ─── Forecast Section ─────────────────────────────────── -->
+    <section class="section" id="forecast">
+      <div class="section-header">
+        <h2><span class="icon">🔮</span> UHI Forecast (2025–2030)</h2>
+        <p>Machine learning predictions using Spark MLlib GBTRegressor</p>
+      </div>
+
+      <div class="city-selector" id="forecast-city-selector"></div>
+      <div class="chart-container">
+        <div id="chart-forecast" style="height:480px;"></div>
+      </div>
+
+      <div class="kpi-grid" id="model-metrics"></div>
+    </section>
+
+    <!-- ─── Alerts Section ───────────────────────────────────── -->
+    <section class="section" id="alerts">
+      <div class="section-header">
+        <h2><span class="icon">⚠️</span> Heat Alerts &amp; Hotspots</h2>
+        <p>Events exceeding critical UHI thresholds</p>
+      </div>
+
+      <div class="kpi-grid" id="alert-kpis"></div>
+
+      <div class="chart-container">
+        <h3>📋 Recent Hotspot Events</h3>
+        <div class="table-container" id="hotspot-table"></div>
+      </div>
+
+      <div class="chart-container">
+        <h3>🌡️ Extreme Heat Events (Urban &gt; 45°C)</h3>
+        <div class="table-container" id="extreme-table"></div>
+      </div>
+    </section>
+
+    <!-- ─── Policy Section ───────────────────────────────────── -->
+    <section class="section" id="policy">
+      <div class="section-header">
+        <h2><span class="icon">📋</span> Policy Recommendations</h2>
+        <p>Data-driven action items based on UHI severity per city</p>
+      </div>
+      <div id="policy-cards"></div>
+    </section>
+
+  </main>
+
+  <!-- ═══ Footer ═══════════════════════════════════════════════ -->
+  <footer class="footer">
+    <h3>🌡️ Urban Heat Island Observatory</h3>
+    <p>Monitoring urban thermal environments across India using distributed satellite analytics and big data processing.</p>
+    <p style="font-size:0.78rem; color: rgba(168,213,186,0.6); margin-top:16px;">
+      Data: NASA MODIS MOD11A2 (2000–2024) &bull; Processing: Apache Spark &bull; ML: Spark MLlib GBTRegressor
+    </p>
+    <div class="tech-badges">
+      <span class="tech-badge">Apache Spark</span>
+      <span class="tech-badge">Apache Kafka</span>
+      <span class="tech-badge">Spark MLlib</span>
+      <span class="tech-badge">MODIS MOD11A2</span>
+      <span class="tech-badge">Python</span>
+      <span class="tech-badge">Plotly.js</span>
+      <span class="tech-badge">Leaflet.js</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
