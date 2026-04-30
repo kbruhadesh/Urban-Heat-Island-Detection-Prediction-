@@ -1,140 +1,178 @@
-# Urban Heat Island Detection using Apache Spark & Streamlit
+# Urban Heat Island Detection & Prediction
 
-This project detects Urban Heat Islands (UHI) in Indian cities using satellite thermal data and analyzes trends using Apache Spark and Streamlit.
+Analyzing Urban Heat Island (UHI) effects across **11 Indian cities** using 25 years of NASA MODIS satellite data (2000–2024), powered by Apache Spark, Kafka, and Spark MLlib.
 
 ## Features
 
-- **Data Source**: MODIS MOD11A2 (Land Surface Temperature)
-- **Big Data Processing**: Apache Spark 3.x
-- **Machine Learning**: Spark MLlib GBTRegressor for UHI prediction
-- **Frontend**: Streamlit dashboard with 7 interactive tabs
-- **Real-time Streaming**: Kafka integration for live monitoring
+- **Data Source**: MODIS MOD11A2 (Land Surface Temperature) via Google Earth Engine
+- **Big Data Processing**: Apache Spark (PySpark)
+- **Machine Learning**: Spark MLlib GBTRegressor for UHI forecasting (2025–2030)
+- **Streaming**: Apache Kafka producer/consumer for real-time data ingestion
+- **Dashboard**: Streamlit with Plotly charts and Folium maps
+- **Storage**: Apache Parquet (partitioned by city/year)
 
 ## Folder Structure
 
 ```
 UrbanHeat_Island_Detection/
-├── spark_code/                    # Spark ETL & ML pipelines
-│   ├── spark_etl.py               # Main Spark job
-│   ├── spark_ml_gbt.py            # GBT model training
-│   ├── spark_streaming.py         # Kafka streaming
-│   ├── requirements.txt           # Spark dependencies
-│   └── spark-warehouse/           # Spark metastore (Git ignored)
-├── dashboard/                     # Streamlit app
-│   ├── app.py                     # Main dashboard
-│   ├── styles.css                 # Premium styling
-│   └── requirements.txt           # Streamlit dependencies
+├── scripts/                        # Google Earth Engine scripts
+│   ├── 1.Data.js                   # Data visualization check
+│   ├── 2.DataCollection.js         # Full data export (11 cities)
+│   └── 3.DataCollectionTest.js     # Delhi test script
+├── spark/                          # Spark processing scripts
+│   ├── convert_to_parquet.py       # CSV → cleaned Parquet conversion
+│   ├── uhi_analysis.py             # Monthly/yearly/seasonal/decade analysis
+│   ├── hotspot_detection.py        # 90th percentile hotspot detection
+│   ├── temporal_analysis.py        # YoY trends, rate of change, moving avg
+│   └── ml_forecast.py              # GBTRegressor ML forecasting
+├── kafka/                          # Kafka streaming pipeline
+│   ├── setup_kafka.sh              # Download & configure Kafka (KRaft mode)
+│   ├── producer.py                 # Streams CSV data → Kafka topic
+│   └── consumer.py                 # PySpark Structured Streaming consumer
+├── dashboard/                      # Streamlit dashboard
+│   ├── app.py                      # Main dashboard (7 interactive tabs)
+│   ├── styles.css                  # Premium dark theme CSS
+│   └── requirements.txt            # Dashboard-specific dependencies
 ├── data/
-│   ├── input/                     # MODIS HDF5 files
-│   ├── output/                    # Processed data (Parquet)
-│   ├── parquet/                   # Processed data (Git ignored)
-│   └── hotspot_alerts/            # Fire alerts
-├── .env                           # Environment variables (Git ignored)
-├── README.md                      # This file
-└── requirements.txt               # Combined dependencies
+│   ├── modis/                      # Raw CSV exports from GEE (11 cities)
+│   ├── output/                     # Analysis results (18 CSV files)
+│   └── parquet/                    # Spark-partitioned Parquet (Git ignored)
+├── .gitignore
+├── requirements.txt                # All Python dependencies
+└── README.md
 ```
+
+## Cities Analyzed
+
+Delhi, Mumbai, Bangalore, Chennai, Hyderabad, Kochi, Pune, Ahmedabad, Kolkata, Jaipur, Surat
 
 ## Prerequisites
 
-- Java 8+
-- Apache Spark 3.x installed
-- Python 3.8+
-- Kafka (optional, for streaming)
+- **Python 3.11** (required — PySpark needs matching driver/worker versions)
+- **Java 11+** (required for Spark)
+- **pip** (Python package manager)
+
+### Verify Prerequisites
+
+```bash
+python3.11 --version    # Should show Python 3.11.x
+java -version           # Should show java 11+ or 21+
+```
 
 ## Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd UrbanHeat_Island_Detection
-   ```
+### 1. Clone the repository
 
-2. **Create virtual environment**
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\Scripts\activate
-   ```
+```bash
+git clone https://github.com/kbruhadesh/Urban-Heat-Island-Detection-Prediction-.git
+cd Urban-Heat-Island-Detection-Prediction-
+```
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Set environment variables
+
+**Critical** — PySpark worker and driver must use the same Python version:
+
+```bash
+export PYSPARK_PYTHON=python3.11
+export PYSPARK_DRIVER_PYTHON=python3.11
+```
+
+> Add these to your `~/.bashrc` to make them permanent.
 
 ## Usage
 
-### 1. Run Spark ETL Job
-
-This job processes MODIS data and creates aggregated files:
+### Step 1: Convert CSV data to Parquet
 
 ```bash
-cd spark_code
-python3 spark_etl.py --input-dir /path/to/MODIS_data
+python3.11 spark/convert_to_parquet.py
 ```
 
-**Output**: Creates parquet files in `data/parquet/` and CSVs in `data/output/`
+Loads 11 city CSVs from `data/modis/`, cleans them, and saves partitioned Parquet to `data/parquet/`.
 
-### 2. Train ML Model (Optional)
-
-Trains GBTRegressor on historical data:
+### Step 2: Run Spark analysis scripts
 
 ```bash
-cd spark_code
-python3 spark_ml_gbt.py
+python3.11 spark/uhi_analysis.py
+python3.11 spark/hotspot_detection.py
+python3.11 spark/temporal_analysis.py
 ```
 
-### 3. Start Streaming (Optional)
+Generates 18 analysis CSVs in `data/output/` (monthly trends, city rankings, hotspot alerts, etc.)
 
-Monitors Kafka for fire alerts:
+### Step 3: Train ML model & generate forecasts
 
 ```bash
-cd spark_code
-python3 spark_streaming.py
+python3.11 spark/ml_forecast.py
 ```
 
-### 4. Run Streamlit Dashboard
+Trains a GBTRegressor on 2000–2022 data, evaluates on 2023–2024, and forecasts UHI for 2025–2030.
 
-Start the interactive dashboard:
+### Step 4: Launch Streamlit dashboard
 
 ```bash
-cd dashboard
-streamlit run app.py
+python3.11 -m streamlit run dashboard/app.py
 ```
 
-Open [http://localhost:8501](http://localhost:8501) in your browser
+Open [http://localhost:8501](http://localhost:8501) in your browser.
+
+### Step 5 (Optional): Kafka streaming demo
+
+```bash
+# Terminal 1: Setup & start Kafka
+cd kafka && chmod +x setup_kafka.sh && ./setup_kafka.sh && cd ..
+
+# Terminal 2: Start producer
+python3.11 kafka/producer.py
+
+# Terminal 3: Start consumer
+python3.11 kafka/consumer.py
+```
+
+## Dashboard Tabs
+
+| Tab | Description |
+|-----|-------------|
+| 🏠 Overview | KPI cards, city rankings, rate of change charts |
+| 📈 Trends | Yearly UHI lines, 5-year moving average, decade comparison |
+| 🗺️ Heatmap | Interactive Folium map + monthly UHI intensity heatmap |
+| 🏙️ City Comparison | Seasonal patterns, temperature bars, peak months |
+| 🔮 Forecast | Historical vs ML-predicted UHI (2025–2030) |
+| ⚠️ Alerts | Critical/High/Moderate hotspot events table |
+| 📋 Policy | Data-driven recommendations per city |
 
 ## Data Flow
 
 ```
-HDF5 MODIS Data → Spark ETL Job → Parquet Files → Spark ML → Streamlit Dashboard
-                                     ↓
-                                 Kafka Topic → Real-time Alerts
+MODIS CSVs → convert_to_parquet.py → Parquet → Analysis Scripts → Output CSVs → Dashboard
+     ↓
+Kafka Producer → Kafka Topic → PySpark Consumer → Parquet
 ```
 
-## Advanced Configuration
+## Troubleshooting
 
-**Environment Variables** (in `.env`):
+**Python version mismatch error:**
 ```
-SPARK_HOME=/opt/spark
-DATA_DIR=data/input
-OUTPUT_DIR=data/output
+PySparkRuntimeError: [PYTHON_VERSION_MISMATCH]
+```
+Fix: Set both environment variables:
+```bash
+export PYSPARK_PYTHON=python3.11
+export PYSPARK_DRIVER_PYTHON=python3.11
 ```
 
-**Spark Configuration**: Edit `spark_code/requirements.txt` for custom Spark settings.
-
-## File Descriptions
-
-- **`spark_code/spark_etl.py`**: Main ETL pipeline that converts HDF5 to Parquet and aggregates data by city/year.
-- **`spark_code/spark_ml_gbt.py`**: Trains GBTRegressor model for UHI prediction.
-- **`spark_code/spark_streaming.py`**: Kafka streaming client for real-time fire detection.
-- **`dashboard/app.py`**: Streamlit dashboard with 7 interactive tabs.
-- **`dashboard/styles.css`**: Premium dark theme for the dashboard.
-
-## License
-
-[MIT License](LICENSE)
+**Streamlit port already in use:**
+```bash
+python3.11 -m streamlit run dashboard/app.py --server.port 8502
+```
 
 ## Acknowledgments
 
-- NASA Earthdata MODIS Program
-- Apache Spark Community
-- Streamlit Community
+- NASA MODIS MOD11A2 Land Surface Temperature data
+- Google Earth Engine for satellite data extraction
+- Apache Spark & Kafka communities
