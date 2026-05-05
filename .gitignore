@@ -38,3 +38,7 @@ Thumbs.db
 
 # Zip
 *.zip
+venv/
+__pycache__/
+.DS_Store
+dashboard/.streamlit/
