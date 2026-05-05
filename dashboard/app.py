@@ -304,6 +304,7 @@ with tabs[3]:
         ), use_container_width=True, hide_index=True)
 
 # ── TAB 5: Forecast ───────────────────────────────────────────────────────
+
 with tabs[4]:
     st.markdown("# 🔮 UHI Forecast (2025–2030)")
 
@@ -311,38 +312,84 @@ with tabs[4]:
         st.markdown("## Historical + Predicted UHI")
 
         for city in (selected_cities or cities[:3]):
+
+            # =========================
+            # HISTORICAL (FILTERED CORRECTLY)
+            # =========================
             hist = data["yearly"][data["yearly"]["city"] == city][["year", "avg_uhi"]].copy()
+            hist = hist.rename(columns={"avg_uhi": "uhi"})
+
+            # 🔥 IMPORTANT FIX
+            hist["year"] = pd.to_numeric(hist["year"], errors="coerce")
+            hist = hist[
+                (hist["year"] >= year_range[0]) &
+                (hist["year"] <= year_range[1])
+            ]
+
             hist["type"] = "Historical"
-            hist.columns = ["year", "uhi", "type"]
 
+            # =========================
+            # FORECAST (DO NOT FILTER)
+            # =========================
             fore = data["forecast"][data["forecast"]["city"] == city].copy()
-            fore_yearly = fore.groupby("year")["predicted_uhi"].mean().reset_index()
-            fore_yearly["type"] = "Forecast"
-            fore_yearly.columns = ["year", "uhi", "type"]
 
-            combined = pd.concat([hist, fore_yearly], ignore_index=True)
+            if not fore.empty:
 
-            fig = px.line(combined, x="year", y="uhi", color="type",
-                          color_discrete_map={"Historical": "#f97316", "Forecast": "#8b5cf6"},
-                          labels={"uhi": "UHI Index (°C)", "year": "Year"})
-            fig.update_layout(**PLOTLY_LAYOUT, title=f"{city} — Historical vs Forecast UHI", height=350)
+                # 🔥 ENSURE TYPES
+                fore["year"] = pd.to_numeric(fore["year"], errors="coerce")
+                fore["predicted_uhi"] = pd.to_numeric(fore["predicted_uhi"], errors="coerce")
+
+                # 🔥 CORRECT AGGREGATION
+                fore_yearly = (
+                    fore.groupby("year", as_index=False)["predicted_uhi"]
+                    .mean()
+                    .rename(columns={"predicted_uhi": "uhi"})
+                )
+
+                fore_yearly["type"] = "Forecast"
+
+                # =========================
+                # COMBINE SAFELY
+                # =========================
+                combined = pd.concat([hist, fore_yearly], ignore_index=True)
+
+            else:
+                combined = hist.copy()
+
+            # 🔥 FINAL FIX (SORT + CLEAN)
+            combined["year"] = pd.to_numeric(combined["year"], errors="coerce")
+            combined = combined.dropna(subset=["year", "uhi"])
+            combined = combined.sort_values(by="year").reset_index(drop=True)
+
+            # =========================
+            # PLOT (UNCHANGED)
+            # =========================
+            fig = px.line(
+                combined,
+                x="year",
+                y="uhi",
+                color="type",
+                color_discrete_map={
+                    "Historical": "#f97316",
+                    "Forecast": "#8b5cf6"
+                },
+                labels={"uhi": "UHI Index (°C)", "year": "Year"}
+            )
+
+            fig.update_layout(
+                **PLOTLY_LAYOUT,
+                title=f"{city} — Historical vs Forecast UHI",
+                height=350
+            )
+
             fig.update_traces(line=dict(width=3))
-            # Add dashed line for forecast
+
+            # Forecast dashed
             if len(fig.data) > 1:
                 fig.data[1].update(line=dict(dash="dash"))
+
             st.plotly_chart(fig, use_container_width=True)
-
-    if not data["test_predictions"].empty:
-        st.markdown("## Model Validation (2023-2024)")
-        test_p = data["test_predictions"]
-        if selected_cities:
-            test_p = test_p[test_p["city"].isin(selected_cities)]
-        test_p["error"] = (test_p["actual_uhi"] - test_p["predicted_uhi"]).abs()
-
-        col1, col2 = st.columns(2)
-        col1.metric("MAE", f"{test_p['error'].mean():.4f}°C")
-        col2.metric("Max Error", f"{test_p['error'].max():.4f}°C")
-
+            
 # ── TAB 6: Alerts ─────────────────────────────────────────────────────────
 with tabs[5]:
     st.markdown("# ⚠️ Heat Alerts & Hotspots")

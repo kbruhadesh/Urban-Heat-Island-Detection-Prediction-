@@ -109,19 +109,18 @@ print(f"Training records (2000-2022): {train_data.count()}")
 print(f"Test records (2023-2024):     {test_data.count()}")
 
 # ── Model 1: GBT Regressor ────────────────────────────────────────────────
-print("\n── Training GBT Regressor ──")
+print("\n── Training Random Forest Regressor ──")
 
-gbt = GBTRegressor(
+rf = RandomForestRegressor(
     featuresCol="features",
     labelCol="avg_uhi",
-    maxIter=100,
+    numTrees=100,
     maxDepth=5,
-    stepSize=0.1,
     seed=42
 )
 
-pipeline = Pipeline(stages=[city_indexer, assembler, gbt])
-gbt_model = pipeline.fit(train_data)
+pipeline = Pipeline(stages=[city_indexer, assembler, rf])
+gbt_model = pipeline.fit(train_data)  # keep variable name same so rest of code works
 
 # ── Evaluate on Test Set ───────────────────────────────────────────────────
 print("\n── Model Evaluation ──")
@@ -160,43 +159,63 @@ print("✅ Saved: data/output/test_predictions.csv")
 # ── Generate Future Forecasts (2025-2030) ──────────────────────────────────
 print("\n── Generating Forecasts (2025-2030) ──")
 
+# Load rate-of-change CSV to get per-city warming/cooling slope
+import os
+rate_df = pd.read_csv("data/output/uhi_rate_of_change.csv")
+rate_map = dict(zip(rate_df["city"], rate_df["slope_per_year"]))
+
 cities = [row.city for row in monthly.select("city").distinct().collect()]
 future_rows = []
 
 for city in cities:
-    # Get latest city data for lag features
     city_data = monthly.filter(col("city") == city).orderBy("year", "month").toPandas()
 
+    # Base LST from last 2 years of data
+    recent = city_data.tail(24)
+    base_urban = recent["avg_urban_lst"].mean()
+    base_rural = recent["avg_rural_lst"].mean()
+    base_night = recent["avg_night_lst"].mean()
+
+    # Per-city UHI trend slope (°C per year)
+    city_slope = rate_map.get(city, 0.0)
+
     for year in range(2025, 2031):
+        years_ahead = year - 2024  # 1 for 2025, 2 for 2026, etc.
+        season_map = {**{m: 0 for m in [3,4,5]}, **{m: 1 for m in [6,7,8,9]},
+                      **{m: 2 for m in [10,11]}, **{m: 3 for m in [1,2,12]}}
+
         for month in range(1, 13):
-            season = 0 if month in [3,4,5] else (1 if month in [6,7,8,9] else (2 if month in [10,11] else 3))
+            season = season_map[month]
             decade = 2  # 2020+
 
-            # Use recent averages for lag features
-            recent = city_data.tail(24)  # last 2 years
-            avg_urban = recent["avg_urban_lst"].mean()
-            avg_rural = recent["avg_rural_lst"].mean()
-            avg_night = recent["avg_night_lst"].mean()
+            # ── KEY FIX: LST grows with each future year ──────────────────
+            # Urban warms slightly faster than rural (UHI intensification)
+            proj_urban = base_urban + years_ahead * 0.20
+            proj_rural = base_rural + years_ahead * 0.15
+            proj_night = base_night + years_ahead * 0.10
 
-            # Same-month historical average for lag
+            # Same-month historical average for lag features
             same_month = city_data[city_data["month"] == month]
-            prev_month_uhi = same_month["avg_uhi"].mean() if len(same_month) > 0 else 0
-            prev_year_uhi = prev_month_uhi
-            rolling = same_month["avg_uhi"].tail(3).mean() if len(same_month) >= 3 else prev_month_uhi
+            base_uhi = same_month["avg_uhi"].mean() if len(same_month) > 0 else 0.0
+
+            # ── Lag features also evolve with trend ───────────────────────
+            prev_month_uhi = round(base_uhi + city_slope * years_ahead, 4)
+            prev_year_uhi  = round(base_uhi + city_slope * (years_ahead - 1), 4)
+            rolling        = round(base_uhi + city_slope * years_ahead, 4)
 
             future_rows.append({
-                "city": city,
-                "year": year,
-                "month": month,
-                "season": season,
-                "decade": decade,
-                "avg_urban_lst": round(avg_urban, 2),
-                "avg_rural_lst": round(avg_rural, 2),
-                "avg_night_lst": round(avg_night, 2),
-                "prev_month_uhi": round(prev_month_uhi, 4),
-                "prev_year_uhi": round(prev_year_uhi, 4),
-                "rolling_3m_uhi": round(rolling, 4),
-                "avg_uhi": 0.0  # placeholder
+                "city":            city,
+                "year":            year,
+                "month":           month,
+                "season":          season,
+                "decade":          decade,
+                "avg_urban_lst":   round(proj_urban, 2),
+                "avg_rural_lst":   round(proj_rural, 2),
+                "avg_night_lst":   round(proj_night, 2),
+                "prev_month_uhi":  prev_month_uhi,
+                "prev_year_uhi":   prev_year_uhi,
+                "rolling_3m_uhi":  rolling,
+                "avg_uhi":         0.0  # placeholder label
             })
 
 future_df = spark.createDataFrame(pd.DataFrame(future_rows))
