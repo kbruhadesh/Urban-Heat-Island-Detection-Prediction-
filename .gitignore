@@ -1,45 +1,8 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-dist/
-build/
-*.egg
-
-# Spark
-*.crc
-metastore_db/
-derby.log
-spark-warehouse/
-
-# Parquet data (large files)
 data/parquet/
-data/kafka_output/
-data/kafka_checkpoints/
+data/output/
 data/models/
-
-# Kafka binaries
-kafka/kafka_*/
-
-# OS
-.DS_Store
-__MACOSX/
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Env
-.env
-*.log
-
-# Zip
-*.zip
+data/modis/
 venv/
 __pycache__/
+*.pyc
 .DS_Store
-dashboard/.streamlit/
-dashboard/.streamlit/
