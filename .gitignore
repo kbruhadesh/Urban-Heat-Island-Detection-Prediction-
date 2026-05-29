@@ -1,10 +1,76 @@
-data/parquet/
-data/output/
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python build files
+build/
+dist/
+*.egg-info/
+
+# -----------------------------
+# Data Files
+# -----------------------------
 data/models/
 data/modis/
-venv/
-__pycache__/
-*.pyc
+data/parquet/
+data/output/
+
+# Large file formats
+*.parquet
+*.h5
+*.hdf5
+*.pkl
+*.joblib
+*.model
+*.sav
+
+# -----------------------------
+# Logs
+# -----------------------------
+*.log
+
+# -----------------------------
+# IDE
+# -----------------------------
+.vscode/
+.idea/
+
+# -----------------------------
+# macOS
+# -----------------------------
 .DS_Store
 
-dashboard/.streamlit
+# -----------------------------
+# Streamlit
+# -----------------------------
+.streamlit/secrets.toml
+
+# -----------------------------
+# Environment Variables
+# -----------------------------
+.env
+.env.*
+
+# -----------------------------
+# Spark
+# -----------------------------
+metastore_db/
+spark-warehouse/
+
+# -----------------------------
+# Temporary Files
+# -----------------------------
+tmp/
+temp/
+*.tmp
