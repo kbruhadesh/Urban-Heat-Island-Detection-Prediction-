@@ -16,6 +16,7 @@ import os
 
 # Start Spark
 spark = SparkSession.builder \
+    .master("spark://localhost:7077") \
     .appName("UHI_Analysis") \
     .config("spark.driver.memory", "2g") \
     .getOrCreate()

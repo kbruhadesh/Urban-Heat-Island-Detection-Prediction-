@@ -1,7 +1,7 @@
 """
 Phase 4: ML Forecasting using Spark MLlib
 - Feature engineering from temporal UHI data
-- GBTRegressor model training
+- Random Forest Regressor model training
 - Train: 2000-2022, Test: 2023-2024
 - Forecast: 2025-2030
 - Metrics: MAE, RMSE, R²
@@ -14,7 +14,7 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from pyspark.ml.feature import StringIndexer, VectorAssembler
-from pyspark.ml.regression import GBTRegressor, RandomForestRegressor
+from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml import Pipeline
 import os
@@ -23,6 +23,7 @@ import numpy as np
 
 # Start Spark
 spark = SparkSession.builder \
+    .master("spark://localhost:7077") \
     .appName("UHI_ML_Forecast") \
     .config("spark.driver.memory", "2g") \
     .getOrCreate()
@@ -105,10 +106,8 @@ print("\n── Train/Test Split ──")
 train_data = monthly.filter(col("year") <= 2022)
 test_data = monthly.filter(col("year") >= 2023)
 
-print(f"Training records (2000-2022): {train_data.count()}")
-print(f"Test records (2023-2024):     {test_data.count()}")
 
-# ── Model 1: GBT Regressor ────────────────────────────────────────────────
+# ── Model 1: Random Forest Regressor ────────────────────────────────────────────────
 print("\n── Training Random Forest Regressor ──")
 
 rf = RandomForestRegressor(
@@ -188,7 +187,6 @@ for city in cities:
             season = season_map[month]
             decade = 2  # 2020+
 
-            # ── KEY FIX: LST grows with each future year ──────────────────
             # Urban warms slightly faster than rural (UHI intensification)
             proj_urban = base_urban + years_ahead * 0.20
             proj_rural = base_rural + years_ahead * 0.15

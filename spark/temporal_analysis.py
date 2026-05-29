@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 
 spark = SparkSession.builder \
+    .master("spark://localhost:7077") \
     .appName("UHI_Temporal_Analysis") \
     .config("spark.driver.memory", "2g") \
     .getOrCreate()

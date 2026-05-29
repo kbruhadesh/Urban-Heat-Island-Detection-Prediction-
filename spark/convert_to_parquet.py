@@ -76,7 +76,7 @@ df.write \
 print(f"\n✅ Parquet saved → {output_path}")
 
 # =========================
-# FINAL EXPORT (ONLY PLACE USING PANDAS)
+# FINAL EXPORT
 # =========================
 os.makedirs("data/output", exist_ok=True)
 
@@ -86,6 +86,8 @@ df.limit(500000).toPandas().to_csv(
 
 print("✅ Sample CSV saved (limited rows to avoid memory issues)")
 
-spark.stop()
-
 print("\n🏁 Phase 1 complete (Distributed Pipeline)")
+
+input("Press Enter to stop Spark...")
+
+spark.stop()

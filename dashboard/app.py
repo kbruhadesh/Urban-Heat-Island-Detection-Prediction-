@@ -102,11 +102,11 @@ with st.sidebar:
         year_range = (2000, 2024)
 
     st.markdown("---")
-    st.markdown("### 📊 Data Summary")
-    if not data["all_clean"].empty:
-        st.metric("Total Records", f"{len(data['all_clean']):,}")
-        st.metric("Cities", len(cities))
-        st.metric("Year Span", f"{year_range[0]}–{year_range[1]}")
+    # st.markdown("### 📊 Data Summary")
+    # if not data["all_clean"].empty:
+    #     st.metric("Total Records", f"{len(data['all_clean']):,}")
+    #     st.metric("Cities", len(cities))
+    #     st.metric("Year Span", f"{year_range[0]}–{year_range[1]}")
 
     st.markdown("---")
     st.caption("📡 Data: MODIS MOD11A2 (Terra)")
@@ -136,7 +136,7 @@ def filter_df(df, city_col="city", year_col="year"):
 # ══════════════════════════════════════════════════════════════════════════
 tabs = st.tabs([
     "🏠 Overview", "📈 Trends", "🗺️ Heatmap", "🏙️ City Comparison",
-    "🔮 Forecast", "⚠️ Alerts", "📋 Policy"
+    "🔮 Forecast", "⚠️ Alerts"
 ])
 
 # ── TAB 1: Overview ───────────────────────────────────────────────────────
@@ -414,46 +414,46 @@ with tabs[5]:
         st.dataframe(extreme_f.head(50), use_container_width=True, hide_index=True)
 
 # ── TAB 7: Policy ─────────────────────────────────────────────────────────
-with tabs[6]:
-    st.markdown("# 📋 Policy Recommendations")
+# with tabs[6]:
+#     st.markdown("# 📋 Policy Recommendations")
 
-    if not data["rankings"].empty:
-        for _, row in data["rankings"].iterrows():
-            city = row["city"]
-            uhi = row["avg_uhi"]
-            peak = row["peak_uhi"]
+#     if not data["rankings"].empty:
+#         for _, row in data["rankings"].iterrows():
+#             city = row["city"]
+#             uhi = row["avg_uhi"]
+#             peak = row["peak_uhi"]
 
-            if city not in (selected_cities or cities):
-                continue
+#             if city not in (selected_cities or cities):
+#                 continue
 
-            with st.expander(f"🏙️ {city} — UHI: {uhi:.2f}°C", expanded=(uhi > 0.3)):
-                if uhi > 0.3:
-                    st.error(f"**HIGH PRIORITY**: {city} shows significant urban heating (+{uhi:.2f}°C)")
-                    st.markdown("""
-                    **Recommended Actions:**
-                    - 🌳 Increase urban green cover by 15-20% in core areas
-                    - 🏗️ Mandate cool roof coatings on new constructions
-                    - 💧 Implement permeable pavements in commercial zones
-                    - 🌊 Develop urban water bodies / mist cooling systems
-                    """)
-                elif uhi > 0:
-                    st.warning(f"**MODERATE**: {city} has mild urban heating (+{uhi:.2f}°C)")
-                    st.markdown("""
-                    **Recommended Actions:**
-                    - 🌳 Maintain existing green cover and expand parks
-                    - 🏗️ Encourage green building certifications
-                    - 📊 Continue monitoring with annual assessments
-                    """)
-                else:
-                    st.success(f"**LOW RISK**: {city} is cooler than surroundings ({uhi:.2f}°C)")
-                    st.markdown("""
-                    **Note:** Negative UHI typically indicates coastal/green influence.
-                    - ✅ Preserve existing green and blue infrastructure
-                    - 📊 Monitor for future changes as city expands
-                    """)
+#             with st.expander(f"🏙️ {city} — UHI: {uhi:.2f}°C", expanded=(uhi > 0.3)):
+#                 if uhi > 0.3:
+#                     st.error(f"**HIGH PRIORITY**: {city} shows significant urban heating (+{uhi:.2f}°C)")
+#                     st.markdown("""
+#                     **Recommended Actions:**
+#                     - 🌳 Increase urban green cover by 15-20% in core areas
+#                     - 🏗️ Mandate cool roof coatings on new constructions
+#                     - 💧 Implement permeable pavements in commercial zones
+#                     - 🌊 Develop urban water bodies / mist cooling systems
+#                     """)
+#                 elif uhi > 0:
+#                     st.warning(f"**MODERATE**: {city} has mild urban heating (+{uhi:.2f}°C)")
+#                     st.markdown("""
+#                     **Recommended Actions:**
+#                     - 🌳 Maintain existing green cover and expand parks
+#                     - 🏗️ Encourage green building certifications
+#                     - 📊 Continue monitoring with annual assessments
+#                     """)
+#                 else:
+#                     st.success(f"**LOW RISK**: {city} is cooler than surroundings ({uhi:.2f}°C)")
+#                     st.markdown("""
+#                     **Note:** Negative UHI typically indicates coastal/green influence.
+#                     - ✅ Preserve existing green and blue infrastructure
+#                     - 📊 Monitor for future changes as city expands
+#                     """)
 
-                if peak > 5:
-                    st.warning(f"⚠️ Peak UHI reached {peak:.2f}°C — extreme event preparedness recommended")
+#                 if peak > 5:
+#                     st.warning(f"⚠️ Peak UHI reached {peak:.2f}°C — extreme event preparedness recommended")
 
 # ── Footer ─────────────────────────────────────────────────────────────────
 st.markdown("---")
